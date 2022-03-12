@@ -1,20 +1,17 @@
 //@author: Lorenzo Pamio
-#ifndef COMPUTER_H
-#define COMPUTER_H
+#ifndef RANDOM_COMPUTER_H
+#define RANDOM_COMPUTER_H
 
-#include "Board.h"
-#include "Piece.h"
+#include "Computer.h"
 
 namespace Chess
 {
-   class RandomComputer
+   class RandomComputer : public Computer
    {
-   private:
-      Board &_board;
-      const Side _side;
-
    public:
-      RandomComputer(Board &board, const Side &side);
+      // Eredito il costruttore
+      using Computer::Computer;
+      // Movimento
       void move(std::ostream &os) const;
 
    private:

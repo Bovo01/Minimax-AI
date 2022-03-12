@@ -1,17 +1,12 @@
 //@Author: Lorenzo Pamio
-#ifndef COMPUTER_CPP
-#define COMPUTER_CPP
+#ifndef RANDOM_COMPUTER_CPP
+#define RANDOM_COMPUTER_CPP
 
 #include <vector>
 #include "RandomComputer.h"
 
 namespace Chess
 {
-   RandomComputer::RandomComputer(Board &board, const Side &side)
-       : _board(board), _side(side)
-   {
-   }
-
    void RandomComputer::move(std::ostream &os) const
    {
       std::vector<Piece> pieces;
