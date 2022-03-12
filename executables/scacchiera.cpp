@@ -3,7 +3,7 @@
 #include <fstream>
 #include <time.h>
 #include "Board.h"
-#include "Computer.h"
+#include "RandomComputer.h"
 // Macro per utilizzare il codice su windows
 #ifdef _WIN32
 #include <Windows.h>
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 Chess::Ending player_computer(Chess::Board &board, std::ostream &os)
 {
    Chess::Side player_side = Chess::Side(rand() % 2);
-   Chess::Computer computer{board, !player_side};
+   Chess::RandomComputer computer{board, !player_side};
 
    Chess::Ending game_over;
 
@@ -129,8 +129,8 @@ Chess::Ending computer_computer(Chess::Board &board, std::ostream &os)
 {
    constexpr int MAX_MOVES = 120;
 
-   Chess::Computer computer1{board, Chess::WHITE};
-   Chess::Computer computer2{board, Chess::BLACK};
+   Chess::RandomComputer computer1{board, Chess::WHITE};
+   Chess::RandomComputer computer2{board, Chess::BLACK};
 
    Chess::Ending game_over;
    int moves = 1;

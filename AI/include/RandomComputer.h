@@ -7,14 +7,14 @@
 
 namespace Chess
 {
-   class Computer
+   class RandomComputer
    {
    private:
       Board &_board;
       const Side _side;
 
    public:
-      Computer(Board &board, const Side &side);
+      RandomComputer(Board &board, const Side &side);
       void move(std::ostream &os) const;
 
    private:

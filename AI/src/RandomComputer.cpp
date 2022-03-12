@@ -3,16 +3,16 @@
 #define COMPUTER_CPP
 
 #include <vector>
-#include "Computer.h"
+#include "RandomComputer.h"
 
 namespace Chess
 {
-   Computer::Computer(Board &board, const Side &side)
+   RandomComputer::RandomComputer(Board &board, const Side &side)
        : _board(board), _side(side)
    {
    }
 
-   void Computer::move(std::ostream &os) const
+   void RandomComputer::move(std::ostream &os) const
    {
       std::vector<Piece> pieces;
       // Prendo pezzi dello schieramento attuale del bot
@@ -47,7 +47,7 @@ namespace Chess
       }
    }
 
-   PieceType Computer::get_random_promotion() const
+   PieceType RandomComputer::get_random_promotion() const
    {
       switch (rand() % 4)
       {
