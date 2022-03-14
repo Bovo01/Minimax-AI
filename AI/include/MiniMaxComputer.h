@@ -2,6 +2,7 @@
 #define MINIMAX_COMPUTER_H
 
 #include "Computer.h"
+#include "Tree.h"
 
 namespace Chess
 {
@@ -9,6 +10,7 @@ namespace Chess
    {
    private:
       int _depth;
+      Tree<Board> _positions;
 
    public:
       MiniMaxComputer(Board &board, const Side &side, int depth);
