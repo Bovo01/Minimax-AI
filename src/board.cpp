@@ -545,11 +545,11 @@ namespace Chess
    void Board::move(const Position from, const Position to, PieceType promotion_type)
    {
       // Lancia una PieceNotFoundException se non viene trovato un pezzo alla posizione from
-      Piece &p_from = find_piece(from);
-      if (!can_move(p_from, to))
+      Piece *p_from = &find_piece(from);
+      if (!can_move(*p_from, to))
          throw IllegalMoveException();
       // Controllo la promozione
-      if (p_from.type() == PAWN && to.y == (p_from.side() == WHITE ? 7 : 0))
+      if (p_from->type() == PAWN && to.y == (p_from->side() == WHITE ? 7 : 0))
       {
          if (!is_valid_promotion_type(promotion_type))
          {
@@ -572,35 +572,39 @@ namespace Chess
       }
       catch (PieceNotFoundException e)
       {
-         if (p_from.type() == PAWN)
+         if (p_from->type() == PAWN)
             // Se sto muovendo un pedone azzero il contatore
             _50_move_count = 0;
-         else if (p_from.side() == _50_move_start)
+         else if (p_from->side() == _50_move_start)
             // Se non è stato azzerato il contatore, lo incremento (solo una volta ogni 2, visto che una mossa è data da una del bianco e una del nero)
             _50_move_count++;
       }
       // Se il contatore delle mosse è a 0, segnalo chi l'ha inizializzato
       if (_50_move_count == 0)
-         _50_move_start = p_from.side();
+         _50_move_start = p_from->side();
 
       /* MOVIMENTO EFFETTIVO DEL PEZZO */
-      // Elimino il pezzo nella posizione finale (che viene mangiato)
-      kill_piece(to);
       // Muovo il pezzo selezionato nella posizione finale
-      p_from.move(to);
+      kill_piece(to);
+      // Riassegno a p_from il pezzo alla posizione from (viene sminchiato dal kill_piece)
+      p_from = &find_piece(from);
       // Cambio turno
+      p_from->move(to);
+      // Elimino il pezzo nella posizione finale (che viene mangiato)
       toggle_turn();
       /* FINE MOVIMENTO DEL PEZZO */
 
       /* CASI SPECIALI */
       // En passant, elimino il pezzo mangiato e valorizzo la variabile _last_pawn_move
-      if (p_from.type() == PAWN)
+      if (p_from->type() == PAWN)
       {
          // Sto mangiando en passant
-         if (_last_pawn_move == to.x && from.y == (p_from.side() == WHITE ? 4 : 3))
+         if (_last_pawn_move == to.x && from.y == (p_from->side() == WHITE ? 4 : 3))
          {
             // Elimino il pezzo mangiato
             kill_piece(Position{to.x, from.y});
+            // Riassegno a p_from il pezzo alla posizione from (viene sminchiato dal kill_piece)
+            p_from = &find_piece(to);
          }
 
          // Il pedone è avanzato di 2
@@ -610,21 +614,24 @@ namespace Chess
             _last_pawn_move = -1; // valore invalido, non ho appena avanzato un pedone di 2
 
          // Promozione
-         if (to.y == (p_from.side() == WHITE ? 7 : 0))
+         if (to.y == (p_from->side() == WHITE ? 7 : 0))
          {
+            const Side s = p_from->side();
             // Elimino il pedone appena mosso
             kill_piece(to);
             // Sostituisco il pedone con la sua promozione
-            _pieces.push_back(Piece{to, p_from.side(), promotion_type});
+            _pieces.push_back(Piece{to, s, promotion_type});
+            // Riassegno a p_from il pezzo alla posizione from (viene sminchiato dal kill_piece)
+            p_from = &find_piece(to);
          }
       }
       else
          _last_pawn_move = -1; // valore invalido
       // Arrocco
-      if (p_from.type() == KING)
+      if (p_from->type() == KING)
       {
          // Rimuovo l'arrocco al re che si è appena mosso
-         if (p_from.side() == WHITE)
+         if (p_from->side() == WHITE)
          {
             _can_white_castle_right = false;
             _can_white_castle_left = false;
@@ -644,9 +651,9 @@ namespace Chess
             rook.move(Position{(short)(from.x + castle_direction), from.y});
          }
       }
-      else if (p_from.type() == ROOK) /* Tolgo la possibilità di arroccare al re se sto muovendo una torre */
+      else if (p_from->type() == ROOK) /* Tolgo la possibilità di arroccare al re se sto muovendo una torre */
       {
-         if (p_from.side() == WHITE)
+         if (p_from->side() == WHITE)
          {
             if (from.x == 7)
                _can_white_castle_right = false;
