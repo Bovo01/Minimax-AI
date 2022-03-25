@@ -43,6 +43,8 @@ namespace Chess
       bool operator!=(const Position &other) const;
       // Converte l'oggetto in stringa
       std::string to_string() const;
+      // Converte l'oggetto in stringa in lowercase
+      std::string to_lower_string() const;
    };
 
    std::ostream &operator<<(std::ostream &os, const Position &pos);

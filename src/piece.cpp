@@ -296,11 +296,34 @@ namespace Chess
       return _side == piece._side && _type == piece._type && _position == piece._position;
    }
 
+   bool Piece::operator!=(const Piece& piece) const {
+      return !(*this == piece);
+   }
 
    // Overload operatore toggle per lo schieramento
    Side operator!(const Side &side)
    {
       return side == WHITE ? BLACK : WHITE;
+   }
+
+   // Ritorna il carattere per il pgn in base al tipo di pezzo
+   std::string get_pgn_char(PieceType type) {
+      switch (type) {
+      case PAWN:
+         return "";
+      case KNIGHT:
+         return "N";
+      case BISHOP:
+         return "B";
+      case ROOK:
+         return "R";
+      case QUEEN:
+         return "Q";
+      case KING:
+         return "K";
+      default:
+         throw "Invalid piece type";
+      }
    }
 }
 

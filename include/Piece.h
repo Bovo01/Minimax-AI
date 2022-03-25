@@ -23,6 +23,7 @@ namespace Chess
       QUEEN = 'D',
       KING = 'R'
    };
+   std::string get_pgn_char(PieceType type);
    // Classe Piece che rappresenta un pezzo in tutte le sue caratteristiche
    class Piece
    {
@@ -57,6 +58,7 @@ namespace Chess
       void get_moves(std::vector<Position> &v) const;
 
       bool operator==(const Piece& piece) const;
+      bool operator!=(const Piece& piece) const;
    };
 
    Side operator!(const Side &side);

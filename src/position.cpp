@@ -70,6 +70,14 @@ namespace Chess
       return s;
    }
 
+   std::string Position::to_lower_string() const {
+      std::string s;
+      s.push_back(((char) ('a' + x)));
+      s.push_back((char) ('1' + y));
+      return s;
+   }
+
+
 
    std::ostream& operator<<(std::ostream &os, const Position &pos) {
       return os << pos.to_string();

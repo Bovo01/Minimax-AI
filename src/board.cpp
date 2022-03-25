@@ -38,7 +38,6 @@ namespace Chess
       initialize();
    }
 
-
    Board::Board(const Board &other)
        : _pieces(other._pieces), _turn(other._turn),
          _can_white_castle_left(other._can_white_castle_left), _can_white_castle_right(other._can_white_castle_right),
@@ -333,6 +332,90 @@ namespace Chess
          if (p.side() == side)
             output.push_back(p);
       }
+   }
+
+   std::string Board::get_pgn() const
+   {
+      Board b;
+      std::string pgn;
+      int turno = 0;
+
+      for (const Mossa &mossa : _mosse)
+      {
+         // Aggiungo il numero di mossa
+         if (b._turn == WHITE)
+            pgn += std::to_string(++turno) + ".";
+         const Piece p_from = b.find_piece(mossa.from);
+         // Controllo arrocco
+         if (p_from.type() == KING && abs(mossa.from.x - mossa.to.x) == 2)
+         {
+            pgn += "0-0";
+            // Arrocco lungo
+            if (mossa.to.x == 2)
+               pgn += "-0";
+         }
+         else
+         {
+            // Aggiungo il pezzo spostato
+            pgn += get_pgn_char(p_from.type());
+            // Controllo ambiguità
+            std::vector<Piece> same_pieces;
+            same_pieces.reserve(b._pieces.size());
+            std::copy_if(b._pieces.begin(), b._pieces.end(), same_pieces.begin(),
+                         [&p_from](const Piece &p)
+                         {
+                            return p.position() != p_from.position() && p.type() == p_from.type() && p.side() == p_from.side();
+                         });
+            for (const Piece &p : same_pieces)
+            {
+               if (b.can_move(p, mossa.to))
+               {
+                  // C'è un'ambiguità
+                  if (p_from.position().x != p.position().x)
+                     pgn += p_from.position().to_lower_string()[0];
+                  else if (p_from.position().y != p.position().y)
+                     pgn += p_from.position().to_lower_string()[1];
+                  break;
+               }
+            }
+            // Controllo se sta mangiando
+            try
+            {
+               b.find_piece(mossa.to);
+               // Se ha mangiato aggiungo 'x'
+               pgn += 'x';
+            }
+            catch (PieceNotFoundException e)
+            {
+               // Potenziale en passant (aggiungo 'x' perché sto mangiando)
+               if (p_from.type() == PAWN && mossa.from.x != mossa.to.x)
+                  pgn += 'x';
+            }
+            // Scrivo la posizione in cui mi sono mosso
+            pgn += mossa.to.to_lower_string();
+         }
+         // Eseguo la mossa nella scacchiera 'virtuale'
+         b.move(mossa.from, mossa.to);
+         // Controllo se è matto
+         if (Ending end = b.is_checkmate_stalemate(b._turn))
+         {
+            if (end == WHITE_CHECKMATE)
+               pgn += "# 1-0";
+            else if (end == BLACK_CHECKMATE)
+               pgn += "# 0-1";
+            else // patta
+               pgn += " 0.5-0.5";
+            break;
+         }
+         // Se non è matto controllo se è scacco
+         else if (b.is_check(b._turn, b._pieces))
+         {
+            pgn += '+';
+         }
+         pgn += ' ';
+      }
+
+      return pgn;
    }
 
    /* CONTROLLO FINALI */
@@ -670,6 +753,7 @@ namespace Chess
       }
 
       _positions.push_back(_pieces);
+      _mosse.push_back({from, to, promotion_type});
    }
 
    Ending Board::is_game_over(void) const

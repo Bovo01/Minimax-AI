@@ -27,6 +27,14 @@ namespace Chess
    // Ritorna in stringa il finale
    const char *ending(Chess::Ending e);
 
+   // Struttura che contiene una mossa
+   struct Mossa
+   {
+      Position from;
+      Position to;
+      PieceType promotion;
+   };
+
    class Board
    {
    private:
@@ -46,6 +54,8 @@ namespace Chess
       Side _50_move_start;
       // Elenco di tutte le posizione avvenute nella scacchiera (per controllare la ripetizione di mosse)
       std::vector<std::vector<Piece>> _positions;
+      // Elenco di tutte le mosse avvenute
+      std::vector<Mossa> _mosse;
 
    private:
       // Prepara la posizione iniziale riempiendo il vector _pieces
@@ -97,6 +107,9 @@ namespace Chess
       // Getter per i pezzi di nero e bianco, in base al side passato
       // Copia i pezzi nel vector passato come output
       void get_pieces(Side side, std::vector<Piece> &output) const;
+
+      // Ritorna il pgn della partita giocata
+      std::string get_pgn() const;
 
       // Sposta un pezzo dalla posizione 'from' alla posizione 'to'
       // Lancia una eccezione, se per qualche motivo la mossa non è valida
