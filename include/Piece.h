@@ -57,8 +57,8 @@ namespace Chess
       //    senza considerare gli altri pezzi nella scacchiera
       void get_moves(std::vector<Position> &v) const;
 
-      bool operator==(const Piece& piece) const;
-      bool operator!=(const Piece& piece) const;
+      bool operator==(const Piece& other) const;
+      bool operator!=(const Piece& other) const;
    };
 
    Side operator!(const Side &side);

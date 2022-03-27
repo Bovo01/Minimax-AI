@@ -360,8 +360,7 @@ namespace Chess
             pgn += get_pgn_char(p_from.type());
             // Controllo ambiguità
             std::vector<Piece> same_pieces;
-            same_pieces.reserve(b._pieces.size());
-            std::copy_if(b._pieces.begin(), b._pieces.end(), same_pieces.begin(),
+            std::copy_if(b._pieces.begin(), b._pieces.end(), std::back_inserter(same_pieces),
                          [&p_from](const Piece &p)
                          {
                             return p.position() != p_from.position() && p.type() == p_from.type() && p.side() == p_from.side();

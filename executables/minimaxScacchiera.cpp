@@ -15,37 +15,45 @@
 #define wait sleep(1)
 #endif
 
-constexpr int DEPTH = 3;
+constexpr int DEPTH = 4;
 
-int main() {
+int main()
+{
    Chess::Board b;
    Chess::MiniMaxComputer ai_1(b, Chess::Side::WHITE, DEPTH);
    Chess::MiniMaxComputer ai_2(b, Chess::Side::BLACK, DEPTH);
 
    Chess::Ending game_over;
-   int moves = 0;
+
    std::ofstream out("minimax.txt");
-   try {
-   do {
+
+   do
+   {
       clear;
       std::cout << b << std::endl;
-      out << b.turn() << std::endl << b << std::endl;
-      wait;
+      out << std::endl
+          << (b.turn() ==
+                      Chess::Side::WHITE
+                  ? "WHITE"
+                  : "BLACK")
+          << std::endl
+          << b << std::endl;
+      // wait;
       if (ai_1.side() == b.turn())
-         ai_1.move(std::cout);
+         ai_1.move(out);
       else
-         ai_2.move(std::cout);
-   } while (!(game_over = b.is_game_over()) && ++moves < 60);
+         ai_2.move(out);
+   } while (!(game_over = b.is_game_over()));
 
    clear;
-   std::cout << b << std::endl << std::endl;
+   std::cout << b << std::endl
+             << std::endl;
 
    std::cout << Chess::ending(game_over);
-   } catch (...) {}
+
    std::ofstream pgn("pgn.txt");
    pgn << b.get_pgn();
    pgn.close();
-
 
    return 0;
 }

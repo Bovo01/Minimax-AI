@@ -21,6 +21,8 @@ namespace Chess
 
    private:
       Evaluation minimax(const Board &b, const int depth, const Side &turn) const;
+      // Dà una valutazione alla posizione attuale se è in patta o vittoria per uno dei due giocatori
+      int evaluate_game_over(const Ending &finale, const int depth) const;
       // Dà una valutazione alla posizione che sarà positiva se questo computer sta vincendo, negativa altrimenti
       int evaluate_position(const Board &b) const;
       // Dà una valutazione ad un singolo pezzo, ignorando il suo schieramento
