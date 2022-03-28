@@ -39,9 +39,7 @@ namespace Chess
    }
 
    Board::Board(const Board &other)
-       : _pieces(other._pieces), _turn(other._turn),
-         _can_white_castle_left(other._can_white_castle_left), _can_white_castle_right(other._can_white_castle_right),
-         _can_black_castle_left(other._can_black_castle_left), _can_black_castle_right(other._can_black_castle_right),
+       : _pieces(other._pieces), _turn(other._turn), _castling(other._castling),
          _last_pawn_move(other._last_pawn_move), _50_move_count(other._50_move_count),
          _50_move_start(other._50_move_start), _positions(other._positions)
    {
@@ -270,21 +268,25 @@ namespace Chess
          if (abs(from.x - to.x) == 2)
          {
             short castle_direction = from.x < to.x ? 1 : -1;
-            // Controllo che il re non abbia ancora perso il diritto ad arroccare
-            if (p_from.side() == WHITE)
-            {
-               if (castle_direction > 0 && !_can_white_castle_right)
-                  return false;
-               if (castle_direction < 0 && !_can_white_castle_left)
-                  return false;
-            }
-            else
-            {
-               if (castle_direction > 0 && !_can_black_castle_right)
-                  return false;
-               if (castle_direction < 0 && !_can_black_castle_left)
-                  return false;
-            }
+            if (!can_castle(p_from.side(), castle_direction))
+               return false;
+
+            // // Controllo che il re non abbia ancora perso il diritto ad arroccare
+            // if (p_from.side() == WHITE)
+            // {
+            //    if (castle_direction > 0 && !_can_white_castle_right)
+            //       return false;// _castling & 0b0100 == 0
+            //    if (castle_direction < 0 && !_can_white_castle_left)
+            //       return false;// _castling & 0b1000 == 0
+            // }
+            // else
+            // {
+            //    if (castle_direction > 0 && !_can_black_castle_right)
+            //       return false;
+            //    if (castle_direction < 0 && !_can_black_castle_left)
+            //       return false;
+            // }
+
             // Se al momento il re è sotto scacco non può arroccare
             if (is_check(p_from.side(), _pieces))
                return false;
@@ -316,6 +318,18 @@ namespace Chess
       return true;
    }
 
+   bool Board::can_castle(const Side &s, const short direction) const {
+      __int8 castling_filter = direction == 1 ? 0b01 : 0b10;
+      if (s == WHITE)
+         // Il bianco ha i due bit più significativi
+         castling_filter = castling_filter << 2;
+
+      if (_castling & castling_filter == 0)
+         return false;
+
+      return true;
+   }
+
    /*       GETTERS       */
 
    Side Board::turn(void) const
@@ -331,6 +345,20 @@ namespace Chess
       {
          if (p.side() == side)
             output.push_back(p);
+      }
+   }
+
+   void Board::get_moves(const Piece &p, std::vector<Position> &out) const
+   {
+      const Position &from = p.position();
+
+      std::vector<Position> moves;
+      p.get_moves(moves);
+
+      for (const Position &to : moves)
+      {
+         if (can_move(p, to))
+            out.push_back(to);
       }
    }
 
@@ -713,16 +741,18 @@ namespace Chess
       if (p_from->type() == KING)
       {
          // Rimuovo l'arrocco al re che si è appena mosso
-         if (p_from->side() == WHITE)
-         {
-            _can_white_castle_right = false;
-            _can_white_castle_left = false;
-         }
-         else
-         {
-            _can_black_castle_right = false;
-            _can_black_castle_left = false;
-         }
+         remove_castling(p_from->side());
+
+         // if (p_from->side() == WHITE)
+         // {
+         //    _can_white_castle_right = false;
+         //    _can_white_castle_left = false;
+         // }
+         // else
+         // {
+         //    _can_black_castle_right = false;
+         //    _can_black_castle_left = false;
+         // }
 
          // Se il re sta arroccando muovo la rispettiva torre (il re è già stato spostato)
          if (abs(from.x - to.x) == 2)
@@ -733,26 +763,91 @@ namespace Chess
             rook.move(Position{(short)(from.x + castle_direction), from.y});
          }
       }
-      else if (p_from->type() == ROOK) /* Tolgo la possibilità di arroccare al re se sto muovendo una torre */
+      else if (p_from->type() == ROOK && (from.x == 0 || from.x == 7))
       {
-         if (p_from->side() == WHITE)
-         {
-            if (from.x == 7)
-               _can_white_castle_right = false;
-            else if (from.x == 0)
-               _can_white_castle_left = false;
-         }
-         else
-         {
-            if (from.x == 7)
-               _can_black_castle_right = false;
-            else if (from.x == 0)
-               _can_black_castle_left = false;
-         }
+         /* Tolgo la possibilità di arroccare al re se sto muovendo una torre */
+         remove_castling(p_from->side(), from.x);
+         // if (p_from->side() == WHITE)
+         // {
+         //    if (from.x == 7)
+         //       _can_white_castle_right = false;
+         //    else if (from.x == 0)
+         //       _can_white_castle_left = false;
+         // }
+         // else
+         // {
+         //    if (from.x == 7)
+         //       _can_black_castle_right = false;
+         //    else if (from.x == 0)
+         //       _can_black_castle_left = false;
+         // }
       }
 
       _positions.push_back(_pieces);
       _mosse.push_back({from, to, promotion_type});
+   }
+
+   void Board::remove_castling(const Side &s, const short rook_pos) {
+      __int8 filter = s == WHITE ? 0b0011 : 0b1100;
+      if (rook_pos != -1)
+         filter &= rook_pos == 0 ? 0b0101 : 0b1010;
+      _castling &= filter;
+   }
+
+
+   void Board::_move(const Piece p, const Position to, const PieceType promotion_type)
+   {
+      const Position from = p.position();
+      // Elimino il pezzo nella posizione finale (che viene mangiato)
+      kill_piece(to);
+      // Muovo il pezzo selezionato nella posizione finale
+      find_piece(p.position()).move(to);
+      // Cambio turno
+      toggle_turn();
+
+      /* CASI SPECIALI */
+      if (p.type() == PAWN) {
+         /* En passant */
+         if (_last_pawn_move == to.x && from.y == (p.side() == WHITE ? 4 : 3))
+            // Elimino il pezzo mangiato
+            kill_piece({to.x, from.y});
+
+         // Il pedone è avanzato di 2
+         if (abs(from.y - to.y) == 2)
+            _last_pawn_move = to.x;
+         else
+            _last_pawn_move = -1; // valore invalido, non ho appena avanzato un pedone di 2
+
+         /* Promozione */
+         if (to.y == (p.side() == WHITE ? 7 : 0))
+         {
+            const Side s = p.side();
+            // Elimino il pedone appena mosso
+            kill_piece(to);
+            // Sostituisco il pedone con la sua promozione
+            _pieces.push_back({to, s, promotion_type});
+         }
+      }
+      else
+         _last_pawn_move = -1;
+
+      if (p.type() == KING) {
+         /* Arrocco */
+         // Rimuovo l'arrocco al re che si è appena mosso
+         remove_castling(p.side());
+
+         // Se il re sta arroccando muovo la rispettiva torre (il re è già stato spostato)
+         if (abs(from.x - to.x) == 2)
+         {
+            short castle_direction = from.x < to.x ? 1 : -1;
+            // Sposto la torre vicino al re
+            Piece &rook = find_piece(Position{(short)(castle_direction == 1 ? 7 : 0), from.y});
+            rook.move(Position{(short)(from.x + castle_direction), from.y});
+         }
+      }
+      else if (p.type() == ROOK && (from.x == 0 || from.x == 7))
+         /* Tolgo la possibilità di arroccare al re se sto muovendo una torre */
+         remove_castling(p.side(), from.x);
    }
 
    Ending Board::is_game_over(void) const

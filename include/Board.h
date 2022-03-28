@@ -42,11 +42,13 @@ namespace Chess
       Side _turn{WHITE};
 
       /* VARIABILI UTILI PER MANTENERE LO STATO DELLA PARTITA */
-      // controlli arrocco
-      bool _can_white_castle_left{true};
-      bool _can_white_castle_right{true};
-      bool _can_black_castle_left{true};
-      bool _can_black_castle_right{true};
+      /**
+       * arrocco:
+       *  Primi due bit -> arrocco per il bianco
+       *  Secondi due bit -> arrocco per il nero
+       *  Primo bit di ogni coppia: torre 'a', secondo bit: torre 'h'
+       */
+      __int8 _castling{0b1111};
       // ultima colonna pedone (solo per en passant)
       short _last_pawn_move{-1};
       // regola delle 50 mosse
@@ -80,6 +82,11 @@ namespace Chess
       bool is_insufficient_material() const;
       // Controlla se la posizione corrente è stata già rivista 3 volte durante la partita
       bool is_repetition() const;
+      // Rimuove l'arrocco al re dello schieramento passato per parametro
+      // In caso di movimento di una torre viene passata per parametro la sua coordinata x
+      void remove_castling(const Side &s, const short rook_pos = -1);
+      // Controlla se il re di uno schieramento può arroccare nella direzione passata per parametro
+      bool can_castle(const Side &s, const short direction) const;
 
    public:
       // Costruttore che inizializza una partita
@@ -114,6 +121,13 @@ namespace Chess
       // Sposta un pezzo dalla posizione 'from' alla posizione 'to'
       // Lancia una eccezione, se per qualche motivo la mossa non è valida
       void move(const Position from, const Position to, const PieceType promotion_type = PieceType::KING);
+
+      // Sposta il pezzo 'p' alla posizione 'to'
+      // ATTENZIONE Non vengono effettuati controlli, AZIONE PERICOLOSA
+      void _move(const Piece p, const Position to, const PieceType promotion_type = PieceType::KING);
+
+      // Ottiene tutte le mosse legali del pezzo piece e le mette nel vector out
+      void get_moves(const Piece &p, std::vector<Position> &out) const;
 
       // Ritorna 'Ending::NONE = 0' se la partita non è finita, altrimenti ritorna il modo in cui è finita la partita
       // Controlla solo il giocatore del side = _turn
